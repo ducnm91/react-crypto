@@ -1,0 +1,12 @@
+.coins-trending {
+    display: flex;
+    flex-direction: column;
+    .figure {
+        display: flex;
+        align-items: center;
+    }
+    .figure-img {
+        margin-bottom: 0;
+        margin-right: 8px;
+    }
+}

@@ -1,25 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import logo from './logo.svg';
-import './App.css';
+import './App.scss';
+import { Row, Col, Container } from 'react-bootstrap';
+import Trending from './components/Trending';
+import Categories from './components/Categories';
+import Coins from './components/Coins';
+import ExchangeInfo from './components/ExchangeInfo';
+import Candlestick from './components/Candlestick';
+
+import { useAppSelector } from './state/hooks';
+import { selectBaseToken } from './state/coin/coinSlice';
 
 function App() {
+  const baseToken = useAppSelector(selectBaseToken);
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container fluid="lg">
+      <Row>
+        <Col lg={7}>
+          <Candlestick baseToken={baseToken} quoteToken='usdt' interval='4h' limit={50} />
+        </Col>
+        <Col lg={5}>
+          <Trending />
+          {/* <ExchangeInfo /> */}
+          <Categories />
+        </Col>
+      </Row>
+      <Coins />
+    </Container>
   );
 }
 
