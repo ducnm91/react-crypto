@@ -2,17 +2,22 @@ import React, { useState, useEffect } from 'react';
 import Figure from 'react-bootstrap/Figure'
 import './style.scss'
 
+import { useAppDispatch } from '../../state/hooks';
+
+import { setBaseToken } from '../../state/coin/coinSlice';
+
 import { binanceCoins } from '../../config/coins';
 
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 const CoingeckoRepository = RepositoryFactory.get('coingecko');
 
 function Trending() {
-  const [coinsTrending, setCoinsTrending] = useState([])
+  const [coinsTrending, setCoinsTrending] = useState([]);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     CoingeckoRepository.getListTrending().then(res => {
-      setCoinsTrending(res.data.coins.filter(coin => binanceCoins.indexOf(coin.item.symbol) >= 0))
+      setCoinsTrending(res.data.coins.filter(coin => binanceCoins.indexOf(coin.item.symbol.toLowerCase()) >= 0))
     })
   }, [])
 
@@ -23,7 +28,7 @@ function Trending() {
           <h3>Coins Trending</h3>
           <div className='coins-trending'>
             {coinsTrending.map(coin => 
-              <Figure key={coin.item.coin_id}>
+              <Figure key={coin.item.coin_id} onClick={() => dispatch(setBaseToken(coin.item.symbol))}>
                 <Figure.Image
                   width={25}
                   height={25}

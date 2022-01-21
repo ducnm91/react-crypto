@@ -1,10 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
+import _ from 'lodash';
+import './index.scss';
 import Select from 'react-select';
 import RepositoryFactory from "../../repositories/RepositoryFactory";
 import Highcharts from "highcharts/highstock";
-import loadIndicatorsAll from 'highcharts/indicators/indicators-all'
+import loadIndicatorsAll from 'highcharts/indicators/indicators-all';
+import numeral from 'numeral';
 
 import { Row, Col } from "react-bootstrap";
+
+import { getZeroDecimal } from '../../utils/formatNumber';
 
 loadIndicatorsAll(Highcharts)
 
@@ -35,23 +40,28 @@ const Candlestick = (props) => {
   const [interval, setInterval] = useState('5m');
   const [quoteToken, setQuoteToken] = useState('usdt');
   const [pairToken, setPairToken] = useState('BTC-USDT')
+  const [orderBook, setOrderBook] = useState([])
+  const [tokenLastestPrice, setTokenLastestPrice] = useState(0)
 
   useEffect(() => {
-    let pair = `${props.baseToken}-${quoteToken}`;
+    if(props.baseToken !== quoteToken) {
+      let pair = `${props.baseToken}-${quoteToken}`;
 
-    if (pair.indexOf('eth') >=0 && pair.indexOf('btc') >=0) {
-      pair = 'btc-eth'
+      if (pair.indexOf('eth') >=0 && pair.indexOf('btc') >=0) {
+        pair = 'eth-btc'
+      }
+
+      if (pair.indexOf('bnb') >=0 && pair.indexOf('btc') >=0) {
+        pair = 'bnb-btc'
+      }
+
+      if (pair.indexOf('bnb') >=0 && pair.indexOf('eth') >=0) {
+        pair = 'bnb-eth'
+      }
+
+      setPairToken(pair.toUpperCase())
     }
-
-    if (pair.indexOf('bnb') >=0 && pair.indexOf('btc') >=0) {
-      pair = 'bnb-btc'
-    }
-
-    if (pair.indexOf('bnb') >=0 && pair.indexOf('eth') >=0) {
-      pair = 'bnb-eth'
-    }
-
-    setPairToken(pair.toUpperCase())
+    
   }, [props.baseToken, quoteToken])
 
 
@@ -59,7 +69,7 @@ const Candlestick = (props) => {
     BinanceRepository.getCandlestickData(
       pairToken.replace('-', ''),
       interval,
-      60
+      90
     ).then((res) => {
       // console.log(res.data)
       const parseData = res.data.map((item) => {
@@ -71,8 +81,36 @@ const Candlestick = (props) => {
   }, [pairToken, interval]);
 
   useEffect(() => {
+    BinanceRepository.getDepth(
+      pairToken.replace('-', ''),
+      10
+    ).then((res) => {
+      // console.log(res.data)
+      const { asks, bids } = res.data
+      const parseAsks = asks.map((item) => {
+        return item.map(i => Number(i))
+      });
+
+      const parseBids = bids.map((item) => {
+        return item.map(i => Number(i))
+      });
+
+      setOrderBook({ asks: parseAsks, bids: parseBids });
+    });
+
+    BinanceRepository.getLastestPrice(pairToken.replace('-', '')).then(res => {
+      console.log(res)
+      setTokenLastestPrice(Number(res.data.price))
+    })
+  }, [pairToken])
+
+  useEffect(() => {
     initChart();
   }, [chartData, props.baseToken]);
+
+  useEffect(() => {
+    console.log(orderBook)
+  }, [orderBook])
 
   const initChart = () => {
     Highcharts.stockChart(chartRef.current, {
@@ -177,14 +215,40 @@ const Candlestick = (props) => {
 
   return (
     <>
-      <div ref={chartRef} />
-      <p>SMA(5) - blue  SMA(10) - black  SMA(20) - green</p>
-      <ul>
-        <li>Đường SMA (hay Simple Moving Average - xanh blue) là đường trung bình động đơn giản  được tính bằng trung bình cộng các mức giá đóng cửa trong một khoảng thời gian giao dịch nhất định.</li>
-        <li>Đường EMA (hay Exponential Moving Average - đen) là đường trung bình lũy thừa được tính bằng công thức hàm mũ, trong đó đặt nặng các biến động giá gần nhất. Do đó, EMA khá nhạy cảm với các biến động ngắn hạn, nhận biết các tín hiệu bất thường nhanh hơn đường SMA giúp nhà đầu tư phản ứng nhanh hơn trước các biến động giá ngắn hạn.</li>
-        <li>Đường WMA (hay Weighted Moving Average - xanh green) là đường trung bình tỉ trọng tuyến tính, nó sẽ chú trọng các tham số có tần suất xuất hiện cao nhất. Nghĩa là đường trung bình trọng số WMA sẽ đặt nặng các bước giá có khối lượng giao dịch lớn, quan tâm đến yếu tố chất lượng của dòng tiền.</li>
-      </ul>
+      <Row>
+        <Col lg={9}>
+          <div ref={chartRef} />
+        </Col>
 
+        <Col lg={3}>
+          <Row className="pt-2">
+            <Col lg={6}>Price ({ pairToken.split('-')[1] })</Col>
+            <Col lg={6}>Amount ({ pairToken.split('-')[0] })</Col>
+          </Row>
+          { orderBook.bids &&
+            <div className="bids">
+              { orderBook.bids.map(order => (
+                <Row key={`${order[0]}-${order[1]}`}>
+                  <Col lg={6} className="text-price-bid">{ numeral(order[0]).format(`0,0[.]${getZeroDecimal(order[0])}`) }</Col>
+                  <Col lg={6} className="text-end text-amount-bid">{ numeral(order[1]).format(`0,0[.]${getZeroDecimal(order[1])} a`) }</Col>
+                </Row>
+              )) }
+            </div>
+          }
+          <div className="lastest-price fw-bold fs-3 mt-2 mb-2">{ numeral(tokenLastestPrice).format(`0,0[.]${getZeroDecimal(tokenLastestPrice)}`) }</div>
+          { orderBook.asks &&
+            <div className="asks">
+              { orderBook.asks.map(order => (
+                <Row key={`${order[0]}-${order[1]}`}>
+                  <Col lg={6} className="text-price-ask">{ numeral(order[0]).format(`0,0[.]${getZeroDecimal(order[0])}`) }</Col>
+                  <Col lg={6} className="text-end text-amount-ask">{ numeral(order[1]).format(`0,0[.]${getZeroDecimal(order[1])} a`) }</Col>
+                </Row>
+              )) }
+            </div>
+          }
+        </Col>
+      </Row>
+      
       <Row className="filter mb-4">
         <Col lg={3}>
           <Select 
@@ -202,6 +266,13 @@ const Candlestick = (props) => {
           />
         </Col>
       </Row>
+
+      <p>SMA(5) - blue;  SMA(10) - black;  SMA(20) - green</p>
+      <ul>
+        <li>Đường SMA (hay Simple Moving Average - xanh blue) là đường trung bình động đơn giản  được tính bằng trung bình cộng các mức giá đóng cửa trong một khoảng thời gian giao dịch nhất định.</li>
+        <li>Đường EMA (hay Exponential Moving Average - đen) là đường trung bình lũy thừa được tính bằng công thức hàm mũ, trong đó đặt nặng các biến động giá gần nhất. Do đó, EMA khá nhạy cảm với các biến động ngắn hạn, nhận biết các tín hiệu bất thường nhanh hơn đường SMA giúp nhà đầu tư phản ứng nhanh hơn trước các biến động giá ngắn hạn.</li>
+        <li>Đường WMA (hay Weighted Moving Average - xanh green) là đường trung bình tỉ trọng tuyến tính, nó sẽ chú trọng các tham số có tần suất xuất hiện cao nhất. Nghĩa là đường trung bình trọng số WMA sẽ đặt nặng các bước giá có khối lượng giao dịch lớn, quan tâm đến yếu tố chất lượng của dòng tiền.</li>
+      </ul>
     </>
   ) 
 };

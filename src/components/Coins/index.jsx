@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import _ from 'lodash'
 import Select from 'react-select'
 import numeral from 'numeral'
 import { Table, Image, Row, Col } from 'react-bootstrap'
@@ -6,7 +7,7 @@ import './style.scss'
 
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 
-import { stableCoins } from '../../config/coins';
+import { binanceLoanCoins } from '../../config/coins';
 
 import Loader from '../common/Loader';
 
@@ -18,36 +19,51 @@ import {
   selectStatus
 } from '../../state/coin/coinSlice';
 
+import { getZeroDecimal } from '../../utils/formatNumber';
+
 const CoingeckoRepository = RepositoryFactory.get('coingecko');
 
 const orderList = [
-  { value: 'market_cap_asc', label: 'Market cap asc' },
-  { value: 'market_cap_desc', label: 'Market cap desc' },
-  { value: 'volume_asc', label: 'Volume 24h asc' },
-  { value: 'volume_desc', label: 'Volume 24h desc' }
+  { value: 'market_cap_desc', label: 'Market cap' },
+  { value: 'volume_desc', label: 'Volume 24h' },
+  { value: 'price_change_percentage_1h_in_currency', label: 'price change in 1 hour' },
+  { value: 'price_change_percentage_24h_in_currency', label: 'price change in 24 hours' },
+  { value: 'price_change_percentage_7d_in_currency', label: 'price change in 7 days' },
+  { value: 'ath_change_percentage', label: 'ath change percentage' },
+  { value: 'remainingSupply', label: 'Remaining Supply' }
+]
+
+const orderBy = [
+  'price_change_percentage_1h_in_currency',
+  'price_change_percentage_24h_in_currency',
+  'price_change_percentage_7d_in_currency',
+  'ath_change_percentage',
+  'remainingSupply'
 ]
 
 function Coins() {
   const coins = useAppSelector(selectCoin);
+  const [coinsOderBy, setCoinsOderBy] = useState([])
   const status = useAppSelector(selectStatus);
   const dispatch = useAppDispatch();
-  const [loading, setLoading] = useState(true);
   const [platforms, setPlatforms] = useState([])
   const [platform, setPlatform] = useState()
-  // const [coins, setCoins] = useState([])
+  const [binanceLoanCoinsWithData, setBinanceLoanCoinsWithData] = useState([])
   const [order, setOrder] = useState('volume_desc')
 
   useEffect(() => {
-    // setLoading(true)
+    if(orderBy.indexOf(order) >= 0) {
+      setCoinsOderBy(_.orderBy(coins, [order], ['desc']))
+      setBinanceLoanCoinsWithData(_.orderBy(binanceLoanCoinsWithData, [order], ['desc']))
+    } else {
+      dispatch(getCoinsWidthRelatedDataAsync({order, platform}))
+    }
+    
+  }, [order])
+
+  useEffect(() => {
     dispatch(getCoinsWidthRelatedDataAsync({order, platform}))
-    // CoingeckoRepository.getCoinsWidthRelatedData(order, platform).then(res => {
-    //   setLoading(false)
-    //   const coinsData = res.data.filter(coin => {
-    //     return coin.market_cap_rank && stableCoins.indexOf(coin.symbol) < 0
-    //   })
-    //   setCoins(coinsData)
-    // })
-  }, [order, platform])
+  }, [platform])
 
   useEffect(() => {
     CoingeckoRepository.getCategories().then(res => {
@@ -59,6 +75,13 @@ function Coins() {
       }))
     })
   }, [])
+
+  useEffect(() => {
+    if (coins.length) {
+      setCoinsOderBy(coins)
+      setBinanceLoanCoinsWithData(coins.filter(coin => binanceLoanCoins.indexOf(coin.symbol) >= 0))
+    }
+  }, [coins])
 
   const changeSelectPlatform = (option) => {
     if (option) {
@@ -76,8 +99,10 @@ function Coins() {
 
   return (
     <>
-      <h3>Coins</h3>
-      <Row className="filter mb-4">
+      <Row className="filter mb-4 align-items-center">
+        <Col lg={1}>
+          Filter:
+        </Col>
         <Col lg={3}>
           <Select 
             options={platforms}
@@ -94,8 +119,60 @@ function Coins() {
           />
         </Col>
       </Row>
+
+      <h3>Binance Loan Coins</h3>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Coin</th>
+            <th>Price</th>
+            <th>Ath</th>
+            <th>Ath change percentage</th>
+            <th>1h</th>
+            <th>24h</th>
+            <th>7d</th>
+            <th>24h Volume</th>
+            <th>Remaining Supply</th>
+            <th>Mkt Cap rank</th>
+          </tr>
+        </thead>
+        <tbody>
+          {binanceLoanCoinsWithData.map(coin => 
+            <tr key={coin.id}>
+              <td onClick={() => dispatch(setBaseToken(coin.symbol))}><Image src={ coin.image } width={25} height={25} /> { coin.symbol } - { coin.name }</td>
+              <td>{ numeral(coin.current_price).format(`$0,0[.]${getZeroDecimal(coin.current_price)}`) }</td>
+              <td>{ numeral(coin.ath).format(`$0,0[.]${getZeroDecimal(coin.ath)}`) }</td>
+              <td>
+                { numeral(coin.ath_change_percentage).divide(100).format('0.00%') }
+              </td>
+              <td>
+                { !!coin.price_change_percentage_1h_in_currency && <span className={ coin.price_change_percentage_1h_in_currency > 0 ? 'text-success' : 'text-danger'}>
+                  { numeral(coin.price_change_percentage_1h_in_currency).divide(100).format('0.00%') }
+                </span> }
+              </td>
+              <td>
+                { !!coin.price_change_percentage_24h_in_currency && <span className={ coin.price_change_percentage_24h_in_currency > 0 ? 'text-success' : 'text-danger'}>
+                  { numeral(coin.price_change_percentage_24h_in_currency).divide(100).format('0.00%') }
+                </span> }
+              </td>
+              <td>
+                { !!coin.price_change_percentage_7d_in_currency && <span className={ coin.price_change_percentage_7d_in_currency > 0 ? 'text-success' : 'text-danger'}>
+                  { numeral(coin.price_change_percentage_7d_in_currency).divide(100).format('0.00%') }
+                </span> }
+              </td>
+              <td>{ numeral(coin.total_volume).format('$0,0[.]00 a') }</td>
+              <td>
+                { coin.remainingSupply ? numeral(coin.remainingSupply).format('0.00%') : 'infinite' }
+              </td>
+              <td>{ numeral(coin.market_cap_rank).format('0o') }</td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
+
+      <h3>All Coins</h3>
       
-      { status === 'loading' ? <Loader loading={loading} size={100} /> :
+      { status === 'loading' ? <Loader loading size={100} /> :
         <Table striped bordered hover>
           <thead>
             <tr>
@@ -112,11 +189,11 @@ function Coins() {
             </tr>
           </thead>
           <tbody>
-            {coins.map(coin => 
+            {coinsOderBy.map(coin => 
               <tr key={coin.id}>
                 <td onClick={() => dispatch(setBaseToken(coin.symbol))}><Image src={ coin.image } width={25} height={25} /> { coin.symbol } - { coin.name }</td>
-                <td>{ numeral(coin.current_price).format('$0,0[.]000000') }</td>
-                <td>{ numeral(coin.ath).format('$0,0[.]000000') }</td>
+                <td>{ numeral(coin.current_price).format(`$0,0[.]${getZeroDecimal(coin.current_price)}`) }</td>
+                <td>{ numeral(coin.ath).format(`$0,0[.]${getZeroDecimal(coin.ath)}`) }</td>
                 <td>
                   { numeral(coin.ath_change_percentage).divide(100).format('0.00%') }
                 </td>
@@ -137,7 +214,7 @@ function Coins() {
                 </td>
                 <td>{ numeral(coin.total_volume).format('$0,0[.]00 a') }</td>
                 <td>
-                  { coin.max_supply !== null ? numeral(coin.circulating_supply / coin.max_supply).format('0.00%') : 'infinite' }
+                  { coin.remainingSupply ? numeral(coin.remainingSupply).format('0.00%') : 'infinite' }
                 </td>
                 <td>{ numeral(coin.market_cap_rank).format('0o') }</td>
               </tr>

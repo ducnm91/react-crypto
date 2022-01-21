@@ -28,9 +28,18 @@ export const getCoinsWidthRelatedDataAsync = createAsyncThunk(
   async ({order, platform}:{order: string, platform: string}) => {
     const response = await CoingeckoRepository.getCoinsWidthRelatedData(order, platform);
     // The value we return becomes the `fulfilled` action payload
-    return response.data.filter((coin:any) => {
-      return coin.market_cap_rank && stableCoins.indexOf(coin.symbol) < 0 && binanceCoins.indexOf(coin.symbol) >= 0
+    const binanceCoinsData = response.data.filter((coin:any) => {
+      return coin.market_cap_rank && 
+              stableCoins.indexOf(coin.symbol) < 0 && 
+              binanceCoins.indexOf(coin.symbol) >= 0
     });
+
+    return binanceCoinsData.map((coin: any) =>{
+      return {
+        ...coin,
+        remainingSupply: coin.max_supply ? (coin.circulating_supply / coin.max_supply) : 0
+      }
+    })
   }
 );
 

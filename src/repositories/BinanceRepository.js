@@ -12,7 +12,7 @@ export default {
 
   // get list price of bid, ask of token token pair
   // Ex symbol: ETHBTC, limit: 50
-  getDepth(symbol, limit = 20) {
+  getDepth(symbol, limit = 50) {
     return Client.get(`${baseDomain}/depth?symbol=${symbol}&limit=${limit}`);
   },
   // Get list recent trade
@@ -27,6 +27,9 @@ export default {
   getCandlestickData(symbol, interval, limit = 500) {
     return Client.get(`${baseDomain}/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`);
   },
+  getLastestPrice(symbol) {
+    return Client.get(`${baseDomain}/ticker/price?symbol=${symbol}`);
+  }
   // getPost(id) {
   //     return Client.get(`${resource}/${id}`);
   // },

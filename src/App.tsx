@@ -15,7 +15,7 @@ function App() {
   const baseToken = useAppSelector(selectBaseToken);
   
   return (
-    <Container fluid="lg">
+    <Container fluid>
       <Row>
         <Col lg={7}>
           <Candlestick baseToken={baseToken} quoteToken='usdt' interval='4h' limit={50} />
