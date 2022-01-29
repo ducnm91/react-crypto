@@ -11,7 +11,7 @@ export function formatCash(n) {
   };
 
 export function getZeroDecimal(number) {
-    const n = number.toString()
+    const n = Number(number).toString()
     let zeroDecimal = ''
     let decimalNumber = 0
     if (n.includes('.')) {

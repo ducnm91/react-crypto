@@ -6,6 +6,7 @@ export const stableCoins = [
   'ust',
   'usdk',
   'tusd',
+  'ust'
 ];
 export const binanceCoins = [
   'btc',
@@ -1648,3 +1649,13 @@ export const binanceTradesCoin = {
     'ookibnb',
   ]
 };
+
+export const orderBy = [
+  'price_change_percentage_1h_in_currency',
+  'price_change_percentage_24h_in_currency',
+  'price_change_percentage_7d_in_currency',
+  'ath_change_percentage',
+  'minedSupply'
+]
+
+export const defaultOrderBy = { value: 'volume_desc', label: 'Volume 24h desc' }

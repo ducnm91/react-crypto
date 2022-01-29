@@ -7,15 +7,21 @@ import { stableCoins, binanceCoins } from '../../config/coins';
 const CoingeckoRepository = RepositoryFactory.get('coingecko');
 
 export interface CoinState {
-  status: 'idle' | 'loading' | 'failed';
-  coins: any[];
-  baseToken: string;
+  status: 'idle' | 'loading' | 'failed'
+  coins: any[]
+  baseToken: {
+    id: string
+    symbol: string
+  }
 }
 
 const initialState: CoinState = {
   coins: [],
   status: 'idle',
-  baseToken: 'btc',
+  baseToken: {
+    id: 'bitcoin',
+    symbol: 'btc'
+  },
 };
 
 // The function below is called a thunk and allows us to perform async logic. It
@@ -59,7 +65,7 @@ export const coinSlice = createSlice({
     //   // state.value -= 1;
     // },
     // Use the PayloadAction type to declare the contents of `action.payload`
-    setBaseToken: (state, action: PayloadAction<string>) => {
+    setBaseToken: (state, action: PayloadAction<{id: string, symbol: string}>) => {
       state.baseToken = action.payload;
     },
   },

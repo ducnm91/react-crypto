@@ -11,9 +11,12 @@ import { Row, Col } from "react-bootstrap";
 
 import { getZeroDecimal } from '../../utils/formatNumber';
 
+import useRefresh from '../../hooks/useRefresh';
+
 loadIndicatorsAll(Highcharts)
 
 const BinanceRepository = RepositoryFactory.get("binance");
+const CoingeckoRepository = RepositoryFactory.get("coingecko");
 
 // 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w,1M
 const intervalOptions = [
@@ -33,7 +36,8 @@ const quoteTokenOptions = [
   { value: 'btc', label: 'BTC' },
 ]
 
-const Candlestick = (props) => {
+const Coin = (props) => {
+  const { fastRefresh } = useRefresh()
   const chartRef = useRef(null);
   const [chartData, setChartData] = useState([]);
   const [chartInstance, setChartInstance] = useState();
@@ -42,10 +46,18 @@ const Candlestick = (props) => {
   const [pairToken, setPairToken] = useState('BTC-USDT')
   const [orderBook, setOrderBook] = useState([])
   const [tokenLastestPrice, setTokenLastestPrice] = useState(0)
+  const [token24hrPrice, setToken24hrPrice] = useState({
+    highPrice: 0,
+    lastPrice: 0,
+    lowPrice: 0,
+    weightedAvgPrice: 0
+  })
+
+  const [tokenInfo, setTokenInfo] = useState()
 
   useEffect(() => {
-    if(props.baseToken !== quoteToken) {
-      let pair = `${props.baseToken}-${quoteToken}`;
+    if(props.baseToken.symbol !== quoteToken) {
+      let pair = `${props.baseToken.symbol}-${quoteToken}`;
 
       if (pair.indexOf('eth') >=0 && pair.indexOf('btc') >=0) {
         pair = 'eth-btc'
@@ -78,7 +90,7 @@ const Candlestick = (props) => {
 
       setChartData(parseData);
     });
-  }, [pairToken, interval]);
+  }, [pairToken, interval, fastRefresh]);
 
   useEffect(() => {
     BinanceRepository.getDepth(
@@ -99,25 +111,26 @@ const Candlestick = (props) => {
     });
 
     BinanceRepository.getLastestPrice(pairToken.replace('-', '')).then(res => {
-      console.log(res)
       setTokenLastestPrice(Number(res.data.price))
     })
-  }, [pairToken])
+
+    BinanceRepository.getTicker24h(pairToken.replace('-', '')).then(res => {
+      const { highPrice, lastPrice, lowPrice, weightedAvgPrice } = res.data
+      setToken24hrPrice({highPrice, lastPrice, lowPrice, weightedAvgPrice})
+    })
+
+    CoingeckoRepository.getCoinInfo(props.baseToken.id).then(res => {
+      setTokenInfo(res.data)
+    })
+
+  }, [pairToken, fastRefresh])
 
   useEffect(() => {
     initChart();
   }, [chartData, props.baseToken]);
 
-  useEffect(() => {
-    console.log(orderBook)
-  }, [orderBook])
-
   const initChart = () => {
     Highcharts.stockChart(chartRef.current, {
-      title: {
-        text: pairToken,
-      },
-
       chart: {
         events: {
           load: function (e) {
@@ -176,7 +189,7 @@ const Candlestick = (props) => {
         {
           type: "candlestick",
           id: 'aapl',
-          name: `${props.baseToken.toUpperCase()}-${quoteToken.toUpperCase()}`,
+          name: `${props.baseToken.symbol.toUpperCase()}-${quoteToken.toUpperCase()}`,
           data: chartData
         }, {
           type: 'sma',
@@ -216,10 +229,6 @@ const Candlestick = (props) => {
   return (
     <>
       <Row>
-        <Col lg={9}>
-          <div ref={chartRef} />
-        </Col>
-
         <Col lg={3}>
           <Row className="pt-2">
             <Col lg={6}>Price ({ pairToken.split('-')[1] })</Col>
@@ -246,6 +255,39 @@ const Candlestick = (props) => {
               )) }
             </div>
           }
+        </Col>
+
+        <Col lg={6}>
+          <Row>
+            <Col lg={2}>
+              { pairToken }
+            </Col>
+            <Col lg={10} className='d-flex'>
+              <div className="d-flex flex-column">
+                <div className="label">24h high</div>
+                <div className="value">{ numeral(token24hrPrice.highPrice).format(`0,0[.]${getZeroDecimal(token24hrPrice.highPrice)}`) }</div>
+              </div>
+              <div className="d-flex flex-column ms-4">
+                <div className="label">24h low</div>
+                <div className="value">{ numeral(token24hrPrice.lowPrice).format(`0,0[.]${getZeroDecimal(token24hrPrice.lowPrice)}`) }</div>
+              </div>
+              <div className="d-flex flex-column ms-4">
+                <div className="label">24h average</div>
+                <div className="value">{ numeral(token24hrPrice.weightedAvgPrice).format(`0,0[.]${getZeroDecimal(token24hrPrice.weightedAvgPrice)}`) }</div>
+              </div>
+            </Col>
+          </Row>
+          <div ref={chartRef} />
+        </Col>
+
+        <Col lg={3}>
+          <p dangerouslySetInnerHTML={{ __html: tokenInfo?.description?.en }}></p>
+          <ul>
+            <li><a href={tokenInfo?.links?.homepage[0]} target="_blank">Homepage</a></li>
+            <li><a href={ `https://twitter.com/${tokenInfo?.links?.twitter_screen_name}` } target="_blank">Twitter</a></li>
+            { tokenInfo?.links?.telegram_channel_identifier && <li><a href={`https://t.me/${tokenInfo?.links?.telegram_channel_identifier}`} target="_blank">Telegram</a></li> }
+            <li><a href={ tokenInfo?.links?.repos_url.github[0] } target="_blank">Source on Github</a></li>
+          </ul>
         </Col>
       </Row>
       
@@ -277,4 +319,4 @@ const Candlestick = (props) => {
   ) 
 };
 
-export default Candlestick;
+export default Coin;

@@ -4,6 +4,9 @@ export default {
   getCoins(include_platform = true) {
     return Client.get(`${baseDomain}/coins/list?include_platform=${include_platform}`);
   },
+  getCoinInfo(id) {
+    return Client.get(`${baseDomain}/coins/${id}?tickers=false&developer_data=false&sparkline=false&localization=false&community_data=false`);
+  },
   getCoinsWidthRelatedData(
     order = 'volume_desc',
     platform,

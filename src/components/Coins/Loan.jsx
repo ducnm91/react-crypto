@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import _ from 'lodash';
 import './style.scss';
 
+import { binanceLoanCoins } from '../../config/coins';
+
 import { useAppSelector, useAppDispatch } from '../../state/hooks';
 import { 
   getCoinsWidthRelatedDataAsync,
@@ -23,7 +25,7 @@ const orderBy = [
   'minedSupply'
 ]
 
-function Coins() {
+function Loan() {
   const dispatch = useAppDispatch();
   const { fastRefresh } = useRefresh()
 
@@ -50,7 +52,7 @@ function Coins() {
 
   useEffect(() => {
     if (coins.length) {
-      setSortedCoins(coins)
+      setSortedCoins(coins.filter(coin => binanceLoanCoins.indexOf(coin.symbol) >= 0))
     }
   }, [coins])
 
@@ -58,9 +60,9 @@ function Coins() {
     <>
       <CoinFilter changeFilter={setOptionFilter} />
 
-      <List title="All Coins" status={status} coins={sortedCoins} />
+      <List title="Binance Loan Coins" status={status} coins={sortedCoins} />
     </>
   )
 }
 
-export default Coins;
+export default Loan;
