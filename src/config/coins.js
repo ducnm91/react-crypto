@@ -6,7 +6,8 @@ export const stableCoins = [
   'ust',
   'usdk',
   'tusd',
-  'ust'
+  'ust',
+  'usdp'
 ];
 export const binanceCoins = [
   'btc',
@@ -403,6 +404,7 @@ export const binanceCoins = [
 
 export const binanceLoanCoins = [
   'ada',
+  'atom',
   'avax',
   'axs',
   'bch',
@@ -411,7 +413,6 @@ export const binanceLoanCoins = [
   'cake',
   'chr',
   'ctsi',
-  'dar',
   'dodo',
   'doge',
   'dot',
@@ -419,6 +420,7 @@ export const binanceLoanCoins = [
   'eos',
   'eth',
   'fil',
+  'ftm',
   'gala',
   'ilv',
   'ksm',
@@ -428,11 +430,13 @@ export const binanceLoanCoins = [
   'mana',
   'mbox',
   'mdx',
+  'near',
+  'rose',
   'sand',
   'sol',
   'tlm',
   'uni',
-  'xrp',
+  'xrp'
 ];
 
 export const binanceTradesCoin = {
@@ -1650,12 +1654,129 @@ export const binanceTradesCoin = {
   ]
 };
 
-export const orderBy = [
-  'price_change_percentage_1h_in_currency',
-  'price_change_percentage_24h_in_currency',
-  'price_change_percentage_7d_in_currency',
-  'ath_change_percentage',
-  'minedSupply'
+export const unFollowCoins = [
+  'ilv',
+  'tlm',
+  'mbox',
+  'people',
+  'ada',
+  'cake',
+  'atm',
+  'juv',
+  'bar',
+  'city',
+  'acm',
+  'psg',
+  'lazio',
+  'asr',
+  'santos',
+  'og',
+  'shib',
+  'xrp',
+  'ctsi',
+  'dodo',
+  'chr',
+  'rune',
+  'waxp',
+  'slp',
+  'blz',
+  'vidt',
+  'pyr',
+  'cocos',
+  'ghst',
+  'mc',
+  'ern',
+  'rare',
+  'tvk',
+  'dego',
+  'cos',
+  'rad',
+  'bake',
+  'super',
+  'wnxm',
+  'ava',
+  'orn',
+  'beam',
+  'keep',
+  'wan',
+  'firo',
+  'drc',
+  'xvg',
+  'bat',
+  'btt',
+  'trx',
+  'alice',
+  'ctk',
+  'mir',
+  'iris',
+  'dydx',
+  'rose',
+  'band',
+  'chz',
+  'yfi',
+  'dash',
+  'doge',
+  'sun',
+  'beta',
+  'eps',
+  'icp',
+  'crv',
+  'fil',
+  'qtum',
+  'zec',
+  'omg',
+  'lrc',
+  'mina',
+  'tfuel',
+  'mkr',
+  'hbar',
+  'movr',
+  'jasmy',
+  'jst',
+  'egld',
+  'waves',
+  'klay',
+  'uni',
+  'xlm',
+  'etc',
+  'bch',
+  'ltc',
+  'xvs'
 ]
 
-export const defaultOrderBy = { value: 'volume_desc', label: 'Volume 24h desc' }
+export const getByList = [
+  { value: "volume_desc", label: "Volume 24h" },
+  { value: "market_cap_desc", label: "Market cap" }
+]
+
+
+export const orderByList = [
+  { value: 'price_change_percentage_1h_in_currency', label: 'Price change 1h' },
+  { value: 'price_change_percentage_24h_in_currency', label: 'Price change 24h' },
+  { value: 'price_change_percentage_7d_in_currency', label: 'Price change 7d' },
+  { value: 'minedSupply', label: 'Mined supply' },
+  { value: 'ath_change_percentage', label: 'Ath change' },
+]
+
+
+export const quoteTokenList = [
+  { value: "btc", label: "BTC" },
+  { value: "bnb", label: "BNB" },
+  { value: "eth", label: "ETH" }
+]
+
+//1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w,1M
+export const intervalList = [
+  { value: "1m", label: "1 minute" },
+  { value: "3m", label: "3 minutes" },
+  { value: "5m", label: "5 minutes" },
+  { value: "15m", label: "15 minutes" },
+  { value: "30m", label: "30 minutes" },
+  { value: "1h", label: "1 hour" },
+  { value: "4h", label: "4 hours" },
+  { value: "6h", label: "6 hours" },
+  { value: "12h", label: "12 hours" },
+  { value: "1d", label: "1 day" },
+  { value: "3d", label: "3 days" },
+  { value: "1w", label: "1 week" },
+]

@@ -8,11 +8,11 @@ export default {
     return Client.get(`${baseDomain}/coins/${id}?tickers=false&developer_data=false&sparkline=false&localization=false&community_data=false`);
   },
   getCoinsWidthRelatedData(
-    order = 'volume_desc',
+    getBy = 'volume_desc',
     platform,
     ids
   ) {
-    let resource = `${baseDomain}/coins/markets?vs_currency=usd&order=${order}&price_change_percentage=1h,24h,7d`
+    let resource = `${baseDomain}/coins/markets?vs_currency=usd&order=${getBy}&price_change_percentage=1h,24h,7d&per_page=100`
     if (platform) {
       resource += `&category=${platform}`
     }

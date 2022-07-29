@@ -1,0 +1,3 @@
+2 phien ban:
+- mien phi phai dung account ref toi nick chinh
+- mat phi

@@ -34,7 +34,10 @@ const Item = (props) => {
       </td>
       <td>{ numeral(props.total_volume).format('$0,0[.]00 a') }</td>
       <td>
-        { props.remainingSupply ? numeral(props.remainingSupply).format('0.00%') : 'infinite' }
+        { props.minedSupply ? numeral(props.minedSupply).format('0.00%') : 'infinite' }
+      </td>
+      <td>
+        { props.isSupportLoan ? 'Yes' : 'No' }
       </td>
       <td>{ numeral(props.market_cap_rank).format('0o') }</td>
     </tr>

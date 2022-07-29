@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-export const FAST_INTERVAL = 300000 // 5 minutes
+export const FAST_INTERVAL = 3000 // 3 seconds
 export const SLOW_INTERVAL = 3600000 // 1 hours
 
 const RefreshContext = React.createContext({ slow: 0, fast: 0 })

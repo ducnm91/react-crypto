@@ -1,0 +1,64 @@
+.emulator {
+  height: 600px;
+  width: 20px;
+  background: #ccc;
+  border-radius: 10px;
+  position: relative;
+}
+
+.ranks {
+  height: 80%;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 10%;
+}
+
+.position {
+  position: absolute;
+  left: 30px;
+  white-space: nowrap;
+  padding: 0 5px;
+  border: 1px dashed #ccc;
+  &::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: red;
+    position: absolute;
+    left: -25px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+  &::after {
+    content: '';
+    width: 20px;
+    height: 2px;
+    border-top: 2px dashed green;
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+  &--up {
+    top: 5%;
+  }
+  &--bottom {
+    bottom: 5%;
+  }
+  &--dca {
+    left: auto;
+    right: 30px;
+    &::before {
+      right: -25px;
+      left: auto;
+    }
+    &::after {
+      right: -20px;
+      left: auto;
+    }
+  }
+}

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import _ from 'lodash';
 import './style.scss';
 
+import { getByList, orderByList } from '../../config/coins';
+
 import { useAppSelector, useAppDispatch } from '../../state/hooks';
 import { 
   getCoinsWidthRelatedDataAsync,
@@ -15,14 +17,6 @@ import List from './List'
 
 import CoinFilter from '../common/CoinFilter';
 
-const orderBy = [
-  'price_change_percentage_1h_in_currency',
-  'price_change_percentage_24h_in_currency',
-  'price_change_percentage_7d_in_currency',
-  'ath_change_percentage',
-  'minedSupply'
-]
-
 function Coins() {
   const dispatch = useAppDispatch();
   const { fastRefresh } = useRefresh()
@@ -33,26 +27,38 @@ function Coins() {
   const [sortedCoins, setSortedCoins] = useState([])
   const [optionFilter, setOptionFilter] = useState({
     platform: '',
-    order: '' 
+    orderBy: '',
+    getBy: getByList[0].value,
+    idToken: '',
+    volume: '',
+    isSupportLoan: false
   })
 
   useEffect(() => {
-    if(orderBy.indexOf(optionFilter.order) >= 0) {
-      setSortedCoins(_.orderBy(sortedCoins, [optionFilter.order], ['desc']))
-    } else {
-      dispatch(getCoinsWidthRelatedDataAsync(optionFilter))
-    }
-  }, [optionFilter.order])
-
-  useEffect(() => {
     dispatch(getCoinsWidthRelatedDataAsync(optionFilter))
-  }, [optionFilter.platform, fastRefresh])
+  }, [optionFilter.getBy, optionFilter.platform]) //fastRefresh
 
   useEffect(() => {
-    if (coins.length) {
-      setSortedCoins(coins)
+    let newSortedCoins = [...coins]
+    if (optionFilter.idToken) {
+      newSortedCoins  = _.filter(newSortedCoins, { 'id': optionFilter.idToken })
     }
-  }, [coins])
+
+    if(optionFilter.volume && optionFilter.volume.min) {
+      newSortedCoins  = _.filter(newSortedCoins, function(o) { return o.total_volume >= optionFilter.volume.min && o.total_volume <= optionFilter.volume.max })
+    }
+
+    if (optionFilter.orderBy) {
+      newSortedCoins = _.orderBy(newSortedCoins, [optionFilter.orderBy], ['desc'])
+    }
+
+    if(optionFilter.isSupportLoan) {
+      newSortedCoins = _.filter(newSortedCoins, { 'isSupportLoan': optionFilter.isSupportLoan })
+    }
+    
+    setSortedCoins(newSortedCoins)
+
+  }, [optionFilter.idToken, optionFilter.volume, optionFilter.orderBy, optionFilter.isSupportLoan, coins])
 
   return (
     <>

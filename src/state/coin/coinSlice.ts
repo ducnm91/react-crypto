@@ -1,8 +1,10 @@
+
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState, AppThunk } from '../store';
 import RepositoryFactory from '../../repositories/RepositoryFactory';
 
-import { stableCoins, binanceCoins } from '../../config/coins';
+import { stableCoins, binanceCoins, binanceLoanCoins, unFollowCoins } from '../../config/coins';
+
 
 const CoingeckoRepository = RepositoryFactory.get('coingecko');
 
@@ -31,19 +33,21 @@ const initialState: CoinState = {
 // typically used to make async requests.
 export const getCoinsWidthRelatedDataAsync = createAsyncThunk(
   'counter/fetchCoin',
-  async ({order, platform}:{order: string, platform: string}) => {
-    const response = await CoingeckoRepository.getCoinsWidthRelatedData(order, platform);
+  async ({getBy, platform}:{getBy: string, platform: string}) => {
+    const response = await CoingeckoRepository.getCoinsWidthRelatedData(getBy, platform);
     // The value we return becomes the `fulfilled` action payload
     const binanceCoinsData = response.data.filter((coin:any) => {
       return coin.market_cap_rank && 
               stableCoins.indexOf(coin.symbol) < 0 && 
-              binanceCoins.indexOf(coin.symbol) >= 0
+              binanceCoins.indexOf(coin.symbol) >= 0 &&
+              unFollowCoins.indexOf(coin.symbol) < 0
     });
 
     return binanceCoinsData.map((coin: any) =>{
       return {
         ...coin,
-        remainingSupply: coin.max_supply ? (coin.circulating_supply / coin.max_supply) : 0
+        minedSupply: coin.max_supply ? (coin.circulating_supply / coin.max_supply) : 0,
+        isSupportLoan: binanceLoanCoins.includes(coin.symbol)
       }
     })
   }

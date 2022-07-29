@@ -18,12 +18,13 @@ const List = (props) => {
               <th>Coin</th>
               <th>Price</th>
               <th>Ath</th>
-              <th>Ath change percentage</th>
+              <th>Ath change(%)</th>
               <th>1h</th>
               <th>24h</th>
               <th>7d</th>
               <th>24h Volume</th>
               <th>Mined supply</th>
+              <th>Support Loan</th>
               <th>Mkt Cap rank</th>
             </tr>
           </thead>

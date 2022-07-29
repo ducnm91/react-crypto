@@ -1,91 +1,93 @@
 import React, { useEffect, useState, useRef } from "react";
-import _ from 'lodash';
-import './index.scss';
-import Select from 'react-select';
+import { useParams } from "react-router-dom";
+import _ from "lodash";
+import "./detail.scss";
+import Select from "react-select";
 import RepositoryFactory from "../../repositories/RepositoryFactory";
 import Highcharts from "highcharts/highstock";
-import loadIndicatorsAll from 'highcharts/indicators/indicators-all';
-import numeral from 'numeral';
+import loadIndicatorsAll from "highcharts/indicators/indicators-all";
+import numeral from "numeral";
 
-import { Row, Col } from "react-bootstrap";
+import { Row, Col, Container } from "react-bootstrap";
 
-import { getZeroDecimal } from '../../utils/formatNumber';
+import { getZeroDecimal } from "../../utils/formatNumber";
 
-import useRefresh from '../../hooks/useRefresh';
+import useRefresh from "../../hooks/useRefresh";
 
-loadIndicatorsAll(Highcharts)
+import Research from "../../components/Coin/Research";
+
+loadIndicatorsAll(Highcharts);
 
 const BinanceRepository = RepositoryFactory.get("binance");
 const CoingeckoRepository = RepositoryFactory.get("coingecko");
 
 // 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w,1M
 const intervalOptions = [
-  { value: '5m', label: '5 minutes' },
-  { value: '30m', label: '30 minutes' },
-  { value: '1h', label: '1 hours' },
-  { value: '4h', label: '4 hours' },
-  { value: '12h', label: '12 hours' },
-  { value: '1d', label: '1 days' },
-  { value: '1w', label: '1 weeks' },
-]
+  { value: "5m", label: "5 minutes" },
+  { value: "30m", label: "30 minutes" },
+  { value: "1h", label: "1 hours" },
+  { value: "4h", label: "4 hours" },
+  { value: "12h", label: "12 hours" },
+  { value: "1d", label: "1 days" },
+  { value: "1w", label: "1 weeks" },
+];
 
 const quoteTokenOptions = [
-  { value: 'usdt', label: 'USDT' },
-  { value: 'bnb', label: 'BNB' },
-  { value: 'eth', label: 'ETH' },
-  { value: 'btc', label: 'BTC' },
-]
+  { value: "usdt", label: "USDT" },
+  { value: "bnb", label: "BNB" },
+  { value: "eth", label: "ETH" },
+  { value: "btc", label: "BTC" },
+];
 
-const Coin = (props) => {
-  const { fastRefresh } = useRefresh()
+const Coin = () => {
+  const params = useParams();
+  const { fastRefresh } = useRefresh();
   const chartRef = useRef(null);
   const [chartData, setChartData] = useState([]);
   const [chartInstance, setChartInstance] = useState();
-  const [interval, setInterval] = useState('5m');
-  const [quoteToken, setQuoteToken] = useState('usdt');
-  const [pairToken, setPairToken] = useState('BTC-USDT')
-  const [orderBook, setOrderBook] = useState([])
-  const [tokenLastestPrice, setTokenLastestPrice] = useState(0)
+  const [interval, setInterval] = useState("5m");
+  const [quoteToken, setQuoteToken] = useState("usdt");
+  const [pairToken, setPairToken] = useState("BTC-USDT");
+  const [orderBook, setOrderBook] = useState([]);
+  const [tokenLastestPrice, setTokenLastestPrice] = useState(0);
   const [token24hrPrice, setToken24hrPrice] = useState({
     highPrice: 0,
     lastPrice: 0,
     lowPrice: 0,
-    weightedAvgPrice: 0
-  })
+    weightedAvgPrice: 0,
+  });
 
-  const [tokenInfo, setTokenInfo] = useState()
+  const [tokenInfo, setTokenInfo] = useState();
 
   useEffect(() => {
-    if(props.baseToken.symbol !== quoteToken) {
-      let pair = `${props.baseToken.symbol}-${quoteToken}`;
+    if (tokenInfo?.symbol && tokenInfo.symbol !== quoteToken) {
+      let pair = `${tokenInfo.symbol}-${quoteToken}`;
 
-      if (pair.indexOf('eth') >=0 && pair.indexOf('btc') >=0) {
-        pair = 'eth-btc'
+      if (pair.indexOf("eth") >= 0 && pair.indexOf("btc") >= 0) {
+        pair = "eth-btc";
       }
 
-      if (pair.indexOf('bnb') >=0 && pair.indexOf('btc') >=0) {
-        pair = 'bnb-btc'
+      if (pair.indexOf("bnb") >= 0 && pair.indexOf("btc") >= 0) {
+        pair = "bnb-btc";
       }
 
-      if (pair.indexOf('bnb') >=0 && pair.indexOf('eth') >=0) {
-        pair = 'bnb-eth'
+      if (pair.indexOf("bnb") >= 0 && pair.indexOf("eth") >= 0) {
+        pair = "bnb-eth";
       }
 
-      setPairToken(pair.toUpperCase())
+      setPairToken(pair.toUpperCase());
     }
-    
-  }, [props.baseToken, quoteToken])
-
+  }, [tokenInfo, quoteToken]);
 
   useEffect(() => {
     BinanceRepository.getCandlestickData(
-      pairToken.replace('-', ''),
+      pairToken.replace("-", ""),
       interval,
-      90
+      144
     ).then((res) => {
       // console.log(res.data)
       const parseData = res.data.map((item) => {
-        return item.map(i => Number(i))
+        return item.map((i) => Number(i));
       });
 
       setChartData(parseData);
@@ -93,41 +95,120 @@ const Coin = (props) => {
   }, [pairToken, interval, fastRefresh]);
 
   useEffect(() => {
-    BinanceRepository.getDepth(
-      pairToken.replace('-', ''),
-      10
-    ).then((res) => {
+    BinanceRepository.getDepth(pairToken.replace("-", ""), 10).then((res) => {
       // console.log(res.data)
-      const { asks, bids } = res.data
+      const { asks, bids } = res.data;
       const parseAsks = asks.map((item) => {
-        return item.map(i => Number(i))
+        return item.map((i) => Number(i));
       });
 
       const parseBids = bids.map((item) => {
-        return item.map(i => Number(i))
+        return item.map((i) => Number(i));
       });
 
       setOrderBook({ asks: parseAsks, bids: parseBids });
     });
 
-    BinanceRepository.getLastestPrice(pairToken.replace('-', '')).then(res => {
-      setTokenLastestPrice(Number(res.data.price))
-    })
+    BinanceRepository.getLastestPrice(pairToken.replace("-", "")).then(
+      (res) => {
+        setTokenLastestPrice(Number(res.data.price));
+      }
+    );
 
-    BinanceRepository.getTicker24h(pairToken.replace('-', '')).then(res => {
-      const { highPrice, lastPrice, lowPrice, weightedAvgPrice } = res.data
-      setToken24hrPrice({highPrice, lastPrice, lowPrice, weightedAvgPrice})
-    })
+    BinanceRepository.getTicker24h(pairToken.replace("-", "")).then((res) => {
+      const { highPrice, lastPrice, lowPrice, weightedAvgPrice } = res.data;
+      setToken24hrPrice({ highPrice, lastPrice, lowPrice, weightedAvgPrice });
+    });
 
-    CoingeckoRepository.getCoinInfo(props.baseToken.id).then(res => {
-      setTokenInfo(res.data)
-    })
-
-  }, [pairToken, fastRefresh])
+    CoingeckoRepository.getCoinInfo(params.id).then((res) => {
+      setTokenInfo(res.data);
+    });
+  }, [pairToken, fastRefresh, params]);
 
   useEffect(() => {
     initChart();
-  }, [chartData, props.baseToken]);
+  }, [chartData, tokenInfo]);
+
+  useEffect(() => {
+    if (chartData.length) {
+      const itemDetected = {
+        greens: [],
+        reds: [],
+      };
+      const itemsRed = [];
+      const itemsGreen = [];
+      chartData.forEach((candle, index) => {
+        const currentCandle = {
+          open: candle[1],
+          close: candle[4],
+          openTime: candle[0],
+          closeTime: candle[6],
+        };
+
+        const isRedCurrentCandle = currentCandle.open > currentCandle.close;
+        if (!index) {
+          if (isRedCurrentCandle) {
+            itemsRed.push(currentCandle);
+          } else {
+            itemsGreen.push(currentCandle);
+          }
+        } else {
+          const isRedPrevCandle =
+            chartData[index - 1][1] > chartData[index - 1][4];
+          if (isRedPrevCandle) {
+            if (isRedCurrentCandle) {
+              itemsRed.push(currentCandle);
+            } else {
+              itemsGreen.push(currentCandle);
+              itemsRed.splice(0, itemsRed.length);
+            }
+          } else {
+            if (!isRedCurrentCandle) {
+              itemsGreen.push(currentCandle);
+            } else {
+              itemsRed.push(currentCandle);
+              itemsGreen.splice(0, itemsGreen.length);
+            }
+          }
+        }
+
+        if (itemsRed.length > 2) {
+          const tmp = [...itemsRed];
+          const changePercent =
+            (tmp[0].open - tmp[tmp.length - 1].close) / tmp[0].open;
+          itemDetected.reds.push({
+            changePercent,
+            data: tmp,
+          });
+          // itemsRed.splice(0,itemsRed.length)
+        }
+        if (itemsGreen.length > 2) {
+          const tmp = [...itemsGreen];
+          const changePercent =
+            (tmp[tmp.length - 1].close - tmp[0].open) / tmp[0].open;
+          itemDetected.greens.push({
+            changePercent,
+            data: tmp,
+          });
+          // itemsGreen.splice(0,itemsGreen.length)
+        }
+      });
+      console.log(itemDetected);
+      console.log("--------green");
+
+      itemDetected.greens.forEach((element) => {
+        if (element.changePercent * 100 > 1) {
+          console.log(element.changePercent * 100);
+        }
+      });
+      console.log("--------red");
+      itemDetected.reds.forEach((element) => {
+        if (element.changePercent * 100 > 1) {
+          console.log(element.changePercent * 100);
+        }
+      });
+    }
+  }, [chartData]);
 
   const initChart = () => {
     Highcharts.stockChart(chartRef.current, {
@@ -143,36 +224,36 @@ const Coin = (props) => {
             // });
           },
         },
-        height: '600px'
+        height: "600px",
       },
 
       scrollbar: {
-          enabled: false
+        enabled: false,
       },
       navigator: {
-          enabled: false
+        enabled: false,
       },
       rangeSelector: {
-          enabled: false
+        enabled: false,
       },
       exporting: { enabled: false },
 
       yAxis: {
-          offset: 50,
-          // gridLineColor: 'transparent'
+        offset: 50,
+        // gridLineColor: 'transparent'
       },
 
       xAxis: {
-          minorTickLength: 0,
-          tickLength: 0
+        minorTickLength: 0,
+        tickLength: 0,
       },
 
       plotOptions: {
         candlestick: {
-          color: 'rgb(222, 95, 95)',
-          lineColor: 'rgb(222, 95, 95)',
-          upColor: 'rgb(49, 186, 160)',
-          upLineColor: 'rgb(49, 186, 160)'
+          color: "rgb(222, 95, 95)",
+          lineColor: "rgb(222, 95, 95)",
+          upColor: "rgb(49, 186, 160)",
+          upLineColor: "rgb(49, 186, 160)",
         },
         // sma: {
         //   color: 'yellow'
@@ -185,46 +266,87 @@ const Coin = (props) => {
         // }
       },
 
+      yAxis: [
+        {
+          height: "48%",
+        },
+        {
+          height: "48%",
+          top: "52%",
+        },
+      ],
+
       series: [
         {
           type: "candlestick",
-          id: 'aapl',
-          name: `${props.baseToken.symbol.toUpperCase()}-${quoteToken.toUpperCase()}`,
-          data: chartData
-        }, {
-          type: 'sma',
-          linkedTo: 'aapl',
-          params: {
-            period: 5
-          }
-        }, {
-          type: 'sma',
-          linkedTo: 'aapl',
-          params: {
-            period: 10
-          }
-        }, {
-          type: 'sma',
-          linkedTo: 'aapl',
-          params: {
-            period: 20
-          }
-        }
+          id: "aapl",
+          name: `${tokenInfo?.symbol.toUpperCase()}-${quoteToken.toUpperCase()}`,
+          data: chartData,
+        },
+        {
+          yAxis: 1,
+          type: "rsi",
+          linkedTo: "aapl",
+        },
+        
+        
+        // {
+        //   type: 'ema',
+        //   linkedTo: 'aapl',
+        //   params: {
+        //       period: 7
+        //   }
+        // },
+        // {
+        //   type: 'ema',
+        //   linkedTo: 'aapl',
+        //   params: {
+        //       period: 25
+        //   }
+        // },
+        // {
+        //   type: 'ema',
+        //   linkedTo: 'aapl',
+        //   params: {
+        //       period: 99
+        //   }
+        // },
+        // {
+        //   type: 'wma',
+        //   linkedTo: 'aapl',
+        //   params: {
+        //     period: 7
+        //   }
+        // },
+        // {
+        //   type: 'wma',
+        //   linkedTo: 'aapl',
+        //   params: {
+        //     period: 25
+        //   }
+        // },
+        // {
+        //   type: 'wma',
+        //   linkedTo: 'aapl',
+        //   params: {
+        //     period: 99
+        //   }
+        // }
       ],
     });
   };
 
   const changeInterval = (option) => {
     if (option) {
-      setInterval(option.value)
+      setInterval(option.value);
     }
-  }
+  };
 
   const changeQuoteToken = (option) => {
     if (option) {
-      setQuoteToken(option.value)
+      setQuoteToken(option.value);
     }
-  }
+  };
 
   return (
     <>
@@ -259,21 +381,31 @@ const Coin = (props) => {
 
         <Col lg={6}>
           <Row>
-            <Col lg={2}>
-              { pairToken }
-            </Col>
-            <Col lg={10} className='d-flex'>
+            <Col lg={2}>{pairToken}</Col>
+            <Col lg={10} className="d-flex">
               <div className="d-flex flex-column">
                 <div className="label">24h high</div>
-                <div className="value">{ numeral(token24hrPrice.highPrice).format(`0,0[.]${getZeroDecimal(token24hrPrice.highPrice)}`) }</div>
+                <div className="value">
+                  {numeral(token24hrPrice.highPrice).format(
+                    `0,0[.]${getZeroDecimal(token24hrPrice.highPrice)}`
+                  )}
+                </div>
               </div>
               <div className="d-flex flex-column ms-4">
                 <div className="label">24h low</div>
-                <div className="value">{ numeral(token24hrPrice.lowPrice).format(`0,0[.]${getZeroDecimal(token24hrPrice.lowPrice)}`) }</div>
+                <div className="value">
+                  {numeral(token24hrPrice.lowPrice).format(
+                    `0,0[.]${getZeroDecimal(token24hrPrice.lowPrice)}`
+                  )}
+                </div>
               </div>
               <div className="d-flex flex-column ms-4">
                 <div className="label">24h average</div>
-                <div className="value">{ numeral(token24hrPrice.weightedAvgPrice).format(`0,0[.]${getZeroDecimal(token24hrPrice.weightedAvgPrice)}`) }</div>
+                <div className="value">
+                  {numeral(token24hrPrice.weightedAvgPrice).format(
+                    `0,0[.]${getZeroDecimal(token24hrPrice.weightedAvgPrice)}`
+                  )}
+                </div>
               </div>
             </Col>
           </Row>
@@ -290,33 +422,66 @@ const Coin = (props) => {
           </ul>
         </Col>
       </Row>
-      
+
       <Row className="filter mb-4">
         <Col lg={3}>
-          <Select 
+          <Select
             options={quoteTokenOptions}
-            defaultValue={[{ value: 'usdt', label: 'USDT' }]}
+            defaultValue={[{ value: "usdt", label: "USDT" }]}
             onChange={changeQuoteToken}
           />
         </Col>
         <Col lg={6}>
-          <Select 
+          <Select
             options={intervalOptions}
-            defaultValue={[{ value: '5m', label: '5 minutes' }]}
+            defaultValue={[{ value: "5m", label: "5 minutes" }]}
             onChange={changeInterval}
-            className='ms-4'
+            className="ms-4"
           />
         </Col>
       </Row>
+      <Container>
+        {/* <p>SMA(7) - blue; SMA(25) - black; SMA(99) - green</p>
+        <p>EMA(7) - orange; EMA(25) - purple; EMA(99) - pink</p>
+        <p>WMA(7) - yellow; WMA(25) - dark blue; WMA(99) - pink</p>
+        <ul>
+          <li>
+            Đường SMA (hay Simple Moving Average - xanh blue) là đường trung
+            bình động đơn giản được tính bằng trung bình cộng các mức giá đóng
+            cửa trong một khoảng thời gian giao dịch nhất định.
+          </li>
+          <li>
+            Đường EMA (hay Exponential Moving Average - đen) là đường trung bình
+            lũy thừa được tính bằng công thức hàm mũ, trong đó đặt nặng các biến
+            động giá gần nhất. Do đó, EMA khá nhạy cảm với các biến động ngắn
+            hạn, nhận biết các tín hiệu bất thường nhanh hơn đường SMA giúp nhà
+            đầu tư phản ứng nhanh hơn trước các biến động giá ngắn hạn.
+          </li>
+          <li>
+            Đường WMA (hay Weighted Moving Average - xanh green) là đường trung
+            bình tỉ trọng tuyến tính, nó sẽ chú trọng các tham số có tần suất
+            xuất hiện cao nhất. Nghĩa là đường trung bình trọng số WMA sẽ đặt
+            nặng các bước giá có khối lượng giao dịch lớn, quan tâm đến yếu tố
+            chất lượng của dòng tiền.
+          </li>
+          <li>
+            RSI là chỉ báo động lượng đo lường các thay đổi về giá của một tài
+            sản trong các giai đoạn thời gian lấy con số 14 (14 ngày theo đồ thị
+            hàng ngày, 14 giờ theo biểu đồ hàng giờ, v.v.). Chỉ số được xác định
+            bằng cách chia trung bình giá tăng cho trung bình giá giảm trong
+            khoảng thời gian tính và sau đó biểu diễn chỉ số này trên thang điểm
+            được đặt từ 0 đến 100. Nó đánh giá giá tài sản trên thang điểm từ 0
+            đến 100 trong các giai đoạn thời gian lấy con số 14. Khi RSI có điểm
+            nằm dưới mức 30, nó cho biết giá tài sản có thể gần chạm đáy (quá
+            bán); nếu RSI có điểm nằm trên mức 70, nó cho biết giá tài sản gần
+            mức đỉnh (quá mua) trong khoảng thời gian đó và có khả năng sẽ giảm.
+          </li>
+        </ul> */}
 
-      <p>SMA(5) - blue;  SMA(10) - black;  SMA(20) - green</p>
-      <ul>
-        <li>Đường SMA (hay Simple Moving Average - xanh blue) là đường trung bình động đơn giản  được tính bằng trung bình cộng các mức giá đóng cửa trong một khoảng thời gian giao dịch nhất định.</li>
-        <li>Đường EMA (hay Exponential Moving Average - đen) là đường trung bình lũy thừa được tính bằng công thức hàm mũ, trong đó đặt nặng các biến động giá gần nhất. Do đó, EMA khá nhạy cảm với các biến động ngắn hạn, nhận biết các tín hiệu bất thường nhanh hơn đường SMA giúp nhà đầu tư phản ứng nhanh hơn trước các biến động giá ngắn hạn.</li>
-        <li>Đường WMA (hay Weighted Moving Average - xanh green) là đường trung bình tỉ trọng tuyến tính, nó sẽ chú trọng các tham số có tần suất xuất hiện cao nhất. Nghĩa là đường trung bình trọng số WMA sẽ đặt nặng các bước giá có khối lượng giao dịch lớn, quan tâm đến yếu tố chất lượng của dòng tiền.</li>
-      </ul>
+        {/* <Research symbol={tokenInfo?.symbol} /> */}
+      </Container>
     </>
-  ) 
+  );
 };
 
 export default Coin;
