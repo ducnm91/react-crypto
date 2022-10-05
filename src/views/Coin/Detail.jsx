@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import _ from "lodash";
 import "./detail.scss";
 import RepositoryFactory from "../../repositories/RepositoryFactory";
-import { Container } from "react-bootstrap";
+import { Container, Tab, Tabs } from "react-bootstrap";
 import Research from "../../components/Coin/Research";
 import MediaLink from "../../components/Coin/MediaLink";
 import Chart from "../../components/Coin/Chart";
@@ -64,7 +64,20 @@ const Coin = () => {
         <MediaLink tokenInfo={tokenInfo} />
         <p dangerouslySetInnerHTML={{ __html: tokenInfo?.description?.en }}></p>
         <Research symbol={tokenInfo?.symbol} /> */}
+        <Tabs
+          defaultActiveKey="position"
+          id="uncontrolled-tab-example"
+          className="mb-3"
+        >
+          <Tab eventKey="position" title="Positions">
+            Vị thế
+          </Tab>
+          <Tab eventKey="openOrder" title="Open orders">
+            Các lệnh đang mở
+          </Tab>
+        </Tabs>
       </Container>
+
     </>
   );
 };

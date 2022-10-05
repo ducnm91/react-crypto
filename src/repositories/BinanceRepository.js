@@ -1,5 +1,11 @@
 import Client from './Clients/AxiosClient';
-const baseDomain = 'https://api.binance.com/api/v3';
+import moment from 'moment';
+import CryptoJS from "crypto-js";
+
+
+const baseDomain = 'https://fapi.binance.com/fapi/v1';
+const apiSecret = "oLaYdCzqzSaQUZ53JBuNTf0UbtjvRLZ1LfTufHiBw90bVJL70QyTTpDXdslcmmpx";
+
 export default {
   // get list token pair exchange
   // Ex symbol: ETHBTC
@@ -29,7 +35,52 @@ export default {
   },
   getLastestPrice(symbol) {
     return Client.get(`${baseDomain}/ticker/price?symbol=${symbol}`);
-  }
+  },
+
+  // Future
+
+  async getFutureTransactionHistory() {
+    const timestamp = await this.getServerTime();
+    const startTime = moment().subtract(30, "days").valueOf();
+
+    const queryString = `asset=USDT&recvWindow=40000&startTime=${startTime}&timestamp=${timestamp}`;
+
+    const signature = this.createSignature(queryString);
+
+    const url = `https://api.binance.com/sapi/v1/futures/transfer?${queryString}&signature=${signature}`;
+
+    console.log(url);
+
+    return {};
+  },
+  async getCurrentAllOpenOrders() {
+    const timestamp = await this.getServerTime();
+    const queryString = `symbol=USDT&recvWindow=40000&timestamp=${timestamp}`;
+    const signature = this.createSignature(queryString);
+    const url = `https://fapi.binance.com/fapi/v1/openOrders?${queryString}&signature=${signature}`;
+  },
+  async getPositionInformation() {
+    const timestamp = await this.getServerTime();
+    const queryString = `recvWindow=40000&timestamp=${timestamp}`;
+    const signature = this.createSignature(queryString);
+    const url = `https://fapi.binance.com/fapi/v2/positionRisk?${queryString}&signature=${signature}`;
+    console.log(url);
+    return await [].filter(position => {
+      return parseFloat(position.positionAmt) != 0
+    });
+  },
+  async getServerTime() {
+    const serverTime = await Client.get(`${baseDomain}/time`);
+    return serverTime.data.serverTime;
+  },
+  createSignature(queryString) {
+    const hash = CryptoJS.HmacSHA256(queryString, apiSecret);
+    return CryptoJS.enc.Hex.stringify(hash);
+  },
+  getExchangeInfoFuture() {
+    return Client.get(`https://fapi.binance.com/fapi/v1/exchangeInfo`);
+  },
+  
   // getPost(id) {
   //     return Client.get(`${resource}/${id}`);
   // },

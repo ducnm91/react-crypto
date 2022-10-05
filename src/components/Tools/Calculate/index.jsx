@@ -2,10 +2,17 @@ import React, { useEffect, useState } from "react";
 import _ from "lodash";
 import "./index.scss";
 
+import PositionForm from "./PositionForm";
+
 const types = {
   short: "SHORT",
   long: "LONG",
 };
+
+const typesMargin = {
+  cross: "CROSS",
+  isolated: "ISOLATED"
+}
 
 const lables = {
   takeProfit: "Take Profit",
@@ -82,8 +89,10 @@ const calculatorRange = (initPrice, priceScale, safetyOrders, type) => {
 
 const Calculator = (props) => {
   const [type, setType] = useState(types.short);
+  const [typeMargin, setTypeMargin] = useState(typesMargin.cross);
   const [leverage, setLeverage] = useState(20);
   const [initPrice, setInitPrice] = useState(1000);
+  const [isDisableInitPrice, setIsDisableInitPrice] = useState(false);
   const [priceScale, setPriceScale] = useState(4);
   const [takeProfitPercent, setTakeProfitPercent] = useState(10);
   const [takeProfitPrice, setTakeProfitPrice] = useState(0);
@@ -169,15 +178,15 @@ const Calculator = (props) => {
       }
     }
 
-    const volume = _.divide(totalInvestment, totalMultipler(multiplers));
+    const initVolume = _.divide(_.multiply(totalInvestment, leverage), totalMultipler(multiplers));
 
-    const volumes = [];
+    const initVolumes = [];
     for (let i = 0; i < multiplers.length; i++) {
-      volumes.push(_.multiply(volume, multiplers[i]));
+      initVolumes.push(_.multiply(initVolume, multiplers[i]));
     }
 
-    setVolumeRange(volumes);
-  }, [priceRange, volumeScale, totalInvestment]);
+    setVolumeRange(initVolumes);
+  }, [priceRange, volumeScale, totalInvestment, leverage]);
 
   useEffect(() => {
     const liqPercent = _.divide(100, leverage);
@@ -186,6 +195,10 @@ const Calculator = (props) => {
 
   const handleChangeType = (event) => {
     setType(event.target.value);
+  };
+
+  const handleChangeTypeMargin = (event) => {
+    setTypeMargin(event.target.value);
   };
 
   const handleChangeLeverage = (event) => {
@@ -220,120 +233,177 @@ const Calculator = (props) => {
     setPrecision(event.target.value)
   }
 
+  const handleAddPosition = (formData) => {
+    setIsDisableInitPrice(true);
+    setInitPrice(formData.initPrice);
+    setLeverage(formData.leverage);
+
+  }
+
   return (
     <div className="Card">
       <div className="card-body">
         <h5 className="card-title text-center">Caculate Volume Future</h5>
         <div className="row">
           <div className="col-lg-5">
-            <form action="">
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Type
-                </label>
-                <select
-                  name=""
-                  id=""
-                  className="form-control"
-                  value={type}
-                  onChange={handleChangeType}
-                >
-                  <option value="SHORT">Short</option>
-                  <option value="LONG">Long</option>
-                </select>
+            <div className="row">
+              <div className="col-md-6">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Type L/S
+                  </label>
+                  <select
+                    name=""
+                    id=""
+                    className="form-control"
+                    value={type}
+                    onChange={handleChangeType}
+                  >
+                    <option value="SHORT">Short</option>
+                    <option value="LONG">Long</option>
+                  </select>
+                </div>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Đòn bẩy
-                </label>
-                <select
-                  className="form-control"
-                  value={leverage}
-                  onChange={handleChangeLeverage}
-                >
-                  <option value="5">5x</option>
-                  <option value="10">10x</option>
-                  <option value="20">20x</option>
-                </select>
+              <div className="col-md-6">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Type Margin
+                  </label>
+                  <select
+                    name=""
+                    id=""
+                    className="form-control"
+                    value={typeMargin}
+                    onChange={handleChangeTypeMargin}
+                  >
+                    <option value="CROSS">Cross</option>
+                    <option value="ISOLATED">Isolated</option>
+                  </select>
+                </div>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Chốt giá từng phần
-                </label>
-                <div className="input-group mb-3">
+            </div>
+
+            <div className="row">
+              <div className="col-md-6">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Đòn bẩy
+                  </label>
+                  <select
+                    className="form-control"
+                    value={leverage}
+                    onChange={handleChangeLeverage}
+                  >
+                    <option value="5">5x</option>
+                    <option value="10">10x</option>
+                    <option value="20">20x</option>
+                  </select>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Chốt giá từng phần
+                  </label>
+                  <div className="input-group mb-3">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={priceScale}
+                      readOnly
+                    />
+                    <span className="input-group-text">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-6">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Tỷ lệ chốt lời
+                  </label>
+                  <div className="input-group mb-3">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={takeProfitPercent}
+                      onChange={handleChangeTakeProfitPercent}
+                    />
+                    <span className="input-group-text">%</span>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Tỷ lệ dừng lỗ
+                  </label>
+                  <div className="input-group mb-3">
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={stopLossPercent}
+                      onChange={handleChangeStopLossPercent}
+                    />
+                    <span className="input-group-text">%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="row">
+              <div className="col-md-4">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Khoản đầu tư
+                  </label>
                   <input
                     type="text"
                     className="form-control"
-                    value={priceScale}
-                    readOnly
+                    value={totalInvestment}
+                    onChange={handleChangeTotalInvestment}
                   />
-                  <span className="input-group-text">%</span>
                 </div>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Tỷ lệ chốt lời
-                </label>
-                <div className="input-group mb-3">
+              <div className="col-md-4">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Hệ số
+                  </label>
                   <input
                     type="text"
                     className="form-control"
-                    value={takeProfitPercent}
-                    onChange={handleChangeTakeProfitPercent}
+                    value={volumeScale}
+                    onChange={handleChangeVolumeScale}
                   />
-                  <span className="input-group-text">%</span>
                 </div>
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Tỷ lệ dừng lỗ
-                </label>
-                <div className="input-group mb-3">
+              <div className="col-md-4">
+                <div className="form-group mb-3">
+                  <label htmlFor="" className="form-label">
+                    Số lệnh DCA
+                  </label>
                   <input
                     type="text"
                     className="form-control"
-                    value={stopLossPercent}
-                    onChange={handleChangeStopLossPercent}
+                    value={safetyOrders}
+                    onChange={handleChangeSafetyOrders}
                   />
-                  <span className="input-group-text">%</span>
                 </div>
               </div>
-              <div className="form-group mb-3">
+            </div>
+            
+            <div className="row">
+              <div className="col-md-12">
                 <label htmlFor="" className="form-label">
-                  Khoản đầu tư
+                  Nhập giá kích hoạt hoặc vị thế hiện tại
                 </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={totalInvestment}
-                  onChange={handleChangeTotalInvestment}
-                />
               </div>
-              <div className="form-group mb-3">
+              <div className="col-md-6">
                 <label htmlFor="" className="form-label">
-                  Hệ số
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={volumeScale}
-                  onChange={handleChangeVolumeScale}
-                />
-              </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Số lệnh DCA
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={safetyOrders}
-                  onChange={handleChangeSafetyOrders}
-                />
-              </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Giá kích hoạt
+                  Init price
                 </label>
                 <input
                   type="number"
@@ -342,18 +412,23 @@ const Calculator = (props) => {
                   onChange={handleChangeInitPrice}
                 />
               </div>
-              <div className="form-group mb-3">
-                <label htmlFor="" className="form-label">
-                  Số chữ số thập phân
-                </label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={precision}
-                  onChange={handleChangePrecision}
-                />
+              <div className="col-md-6">
+                <PositionForm />
               </div>
-            </form>
+            </div>
+            
+            
+            <div className="form-group mb-3">
+              <label htmlFor="" className="form-label">
+                Số chữ số thập phân
+              </label>
+              <input
+                type="number"
+                className="form-control"
+                value={precision}
+                onChange={handleChangePrecision}
+              />
+            </div>
           </div>
           <div className="col-lg-7 d-flex justify-content-center">
             <div className="emulator">

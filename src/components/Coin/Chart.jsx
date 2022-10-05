@@ -8,7 +8,7 @@ import Ticker from "./Ticker";
 import { quoteTokenList, intervalList } from "../../config/coins";
 
 const Chart = (props) => {
-  const [interval, setInterval] = useState("1m");
+  const [interval, setInterval] = useState("1d");
   const [quoteToken, setQuoteToken] = useState("btc");
   const [pairToken, setPairToken] = useState(null);
 
@@ -57,14 +57,14 @@ const Chart = (props) => {
   return (
     <div className="container-fluid">
       { !!props.symbol && <Row>
-        <Col lg={6}>
+        <Col lg={12}>
           <Ticker pairToken={`${props.symbol.toUpperCase()}-USDT`} />
           <Candlestick pairToken={`${props.symbol.toUpperCase()}-USDT`} interval={interval} hasRsi />
         </Col>
-        <Col lg={6}>
+        {/* <Col lg={6}>
           <Ticker pairToken={`${quoteToken.toUpperCase()}-USDT`} />
           <Candlestick pairToken={`${quoteToken.toUpperCase()}-USDT`} interval={interval} hasRsi />
-        </Col>
+        </Col> */}
       </Row> }
       <Container>
         <Row className="filter mb-4">

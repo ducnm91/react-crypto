@@ -23,23 +23,12 @@ function App() {
   const baseToken = useAppSelector(selectBaseToken);
   
   return (
-    // <Container fluid>
-    //   <Coin baseToken={baseToken} quoteToken='usdt' interval='4h' limit={50} />
-    //   <Row>
-    //     <Col lg={6}>
-    //       <Trending />
-    //     </Col>
-    //     <Col lg={6}>
-    //       {/* <ExchangeInfo /> */}
-    //       <Categories />
-    //     </Col>
-    //   </Row>
-    //   <Coins />
-    // </Container>
+    <>
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/coins/:id" element={<CoinDetail />} />
     </Routes>
+    </>
   );
 }
 
